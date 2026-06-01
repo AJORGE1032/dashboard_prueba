@@ -1,48 +1,103 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Práctica de Ecuaciones</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import streamlit as st
+import random
+import requests
 
-<div class="container">
+st.set_page_config(
+    page_title="Práctica de Ecuaciones",
+    page_icon="🧮",
+    layout="centered"
+)
 
-    <h1>📚 Ecuaciones de Primer Grado</h1>
+# -----------------------------
+# Función para cargar animación
+# -----------------------------
+def load_lottieurl(url):
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except:
+        return None
 
-    <div class="card">
+# -----------------------------
+# Generar ecuación aleatoria
+# -----------------------------
+def generar_ecuacion():
+    solucion = random.randint(0, 10)
 
-        <h2 id="equation">2x + 3 = 7</h2>
+    a = random.randint(1, 10)
+    b = random.randint(-10, 10)
 
-        <input
-            type="number"
-            id="answer"
-            placeholder="Ingresa x">
+    c = a * solucion + b
 
-        <div class="buttons">
-            <button onclick="checkAnswer()">
-                Verificar
-            </button>
+    pregunta = f"{a}x + ({b}) = {c}"
 
-            <button onclick="generateEquation()">
-                Nueva pregunta
-            </button>
-        </div>
+    return pregunta, solucion
 
-        <p id="message"></p>
+# -----------------------------
+# Inicialización
+# -----------------------------
+if "pregunta" not in st.session_state:
+    st.session_state.pregunta, st.session_state.respuesta = generar_ecuacion()
 
-        <h3>Aciertos: <span id="score">0</span></h3>
+st.title("🧮 Práctica de Ecuaciones de Primer Grado")
 
-    </div>
+st.write(
+    "Resuelve la ecuación. Todas las respuestas son números enteros entre 0 y 10."
+)
 
-</div>
+st.subheader(st.session_state.pregunta)
 
-<canvas id="confetti"></canvas>
+respuesta_usuario = st.number_input(
+    "¿Cuál es el valor de x?",
+    step=1,
+    value=0
+)
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="script.js"></script>
+col1, col2 = st.columns(2)
 
-</body>
-</html>
+# -----------------------------
+# Verificar respuesta
+# -----------------------------
+with col1:
+    if st.button("✅ Verificar"):
+        if respuesta_usuario == st.session_state.respuesta:
+
+            st.success("¡Correcto! 🎉")
+
+            animacion = load_lottieurl(
+                "https://assets2.lottiefiles.com/packages/lf20_jbrw3hcz.json"
+            )
+
+            if animacion:
+                st.components.v1.html(
+                    f"""
+                    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+                    <lottie-player
+                        src="https://assets2.lottiefiles.com/packages/lf20_jbrw3hcz.json"
+                        background="transparent"
+                        speed="1"
+                        style="width: 300px; height: 300px;"
+                        autoplay>
+                    </lottie-player>
+                    """,
+                    height=320
+                )
+
+        else:
+            st.error(
+                f"Incorrecto. Intenta nuevamente."
+            )
+
+# -----------------------------
+# Nueva pregunta
+# -----------------------------
+with col2:
+    if st.button("🔄 Nueva pregunta"):
+        st.session_state.pregunta, st.session_state.respuesta = generar_ecuacion()
+        st.rerun()
+
+# Mostrar solución opcional (para pruebas)
+with st.expander("Modo profesor"):
+    st.write("Respuesta:", st.session_state.respuesta)
